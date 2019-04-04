@@ -1,4 +1,4 @@
-from flask import Flask, request, json, jsonify
+from flask import Flask, request, json, jsonify, render_template
 import os
 import webbrowser
 
@@ -22,7 +22,7 @@ def webhook():
 		else:
 			print("Number is not equal, don't do anything")		
 
-		return my_info
+		return render_template('index.html')
 
 if __name__ == '__main__':
 	app.run(debug=True)
