@@ -1,28 +1,33 @@
-from flask import Flask, request, json, jsonify, render_template
+from flask import Flask, request, json, jsonify
 import os
 import webbrowser
+import requests
 
 app = Flask(__name__)
 
-@app.route('/', methods=['POST'])
-def webhook():
-	if request.headers['Content-Type'] == 'application/json':
-		my_info = json.dumps(request.json)
-		enter_number = 14085836550 
-		obj = json.loads(my_info)
-		numb = obj["talkdesk_phone_number"]
-		no_plus = numb.strip('+')
-		to_int = int(no_plus)
-		print("Talkdesk Phone Number Calling:", to_int)
+@app.route('/')
+def callback():
+	number = request.args.get('number')
+	number = '+1' + number
+	url = 'https://talkforce.talkdeskid.com/oauth/token'
+	body = 'scope=callback%3Awrite&grant_type=client_credentials'
+	headers = {'Content-type': 'application/x-www-form-urlencoded', 'Authorization': 'Basic YzQxODVhZjU2NzAyNDA5NzlkNGFmMjUwZmEwM2YwMDI6MlIzYTdmNldpS2xQckdqRUxYd2hjcmVpLW0wUlpFOEc5TFBFdThITHlNeFNheFRBNnQxYS1BVmJVMllwVFVUVzJNRTFCVzNDbXVUemh5OXFxaGEyQmc='}
 
-		if to_int == enter_number:
-			webbrowser.open('https://app.procedureflow.com')
-			print("Number is equal, open Procedure Flow")
+	r = requests.post(url, data=body, headers=headers)
+	json_data = json.loads(r.text)
+	token = json_data['access_token']
 
-		else:
-			print("Number is not equal, don't do anything")		
+	url2 = 'https://api.talkdeskapp.com/calls/callback'
+	body2 = {"talkdesk_phone_number" : "+14807814730"}
+	body2["contact_phone_number"] = number
+	body2 = json.dumps(body2)
+	print(body2)
+	headers2 = {'Content-type': 'application/json', 'Authorization': 'Bearer ' + token}
 
-		return render_template('index.html')
+	r2 = requests.post(url2, data=body2, headers=headers2)
+	print(r2)
+
+	return '''<h1>Your contact phone number is: {}</h1>'''.format(number)
 
 if __name__ == '__main__':
 	app.run(debug=True)
